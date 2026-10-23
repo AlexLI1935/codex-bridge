@@ -60,7 +60,15 @@ def atomic_json(path, value):
             stream.write("\n")
             stream.flush()
             os.fsync(stream.fileno())
-        os.replace(temporary, path)
+        for attempt in range(10):
+            try:
+                os.replace(temporary, path)
+                break
+            except PermissionError:
+                # Windows readers/virus scanners can briefly deny delete sharing.
+                if attempt == 9:
+                    raise
+                time.sleep(0.01*(attempt+1))
     finally:
         if os.path.exists(temporary):
             os.unlink(temporary)

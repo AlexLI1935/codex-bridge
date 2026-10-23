@@ -50,10 +50,11 @@ class Bridge:
         return self.path(identifier).with_suffix(".run.lock")
 
     def load(self, identifier):
-        try:
-            return read_json(self.path(identifier))
-        except (OSError, ValueError):
-            raise BridgeError("TASK_NOT_FOUND_OR_UNREADABLE") from None
+        with lock(self.path(identifier).with_suffix(".state.lock")):
+            try:
+                return read_json(self.path(identifier))
+            except (OSError, ValueError):
+                raise BridgeError("TASK_NOT_FOUND_OR_UNREADABLE") from None
 
     def save(self, task):
         with lock(self.path(task["task_id"]).with_suffix(".state.lock")):

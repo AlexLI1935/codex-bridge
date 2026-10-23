@@ -112,6 +112,40 @@ class ConfigTests(Isolated):
             self.assertEqual(self.cfg.observe()["status"], "UNVERIFIED")
             self.assertIsNone(self.cfg.load()["timezone"]["observed_utc_offset_minutes"])
 
+    def test_replace_retries_transient_sharing_violation(self):
+        target=self.root / "atomic.json"
+        atomic_json(target,{"value":1})
+        replace=os.replace
+        attempted=[]
+        def transient(source,destination):
+            attempted.append(1)
+            if len(attempted)==1:
+                raise PermissionError("transient sharing violation")
+            replace(source,destination)
+        with patch("codex_config.os.replace",side_effect=transient):
+            atomic_json(target,{"value":2})
+        self.assertEqual(json.loads(target.read_text()),{"value":2})
+
+    @unittest.skipUnless(os.name=="nt","Windows delete-sharing regression")
+    def test_replace_waits_for_existing_windows_reader(self):
+        target=self.root / "atomic.json"
+        atomic_json(target,{"value":1})
+        errors=[]
+        def write():
+            try:
+                atomic_json(target,{"value":2})
+            except OSError as exc:
+                errors.append(exc)
+        with target.open("r") as reader:
+            worker=threading.Thread(target=write)
+            worker.start()
+            time.sleep(0.12)
+            self.assertEqual(json.load(reader),{"value":1})
+        worker.join(3)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(errors,[])
+        self.assertEqual(json.loads(target.read_text()),{"value":2})
+
 
 class UsageTests(Isolated):
     def test_fresh_and_durations(self):
@@ -410,6 +444,25 @@ class RunTests(Isolated):
         self.bridge.prepare_resume(t["task_id"], None)
         self.bridge.usage_reader = lambda: snapshot()
         self.assertEqual(self.bridge.execute(t["task_id"])["status"], "COMPLETED")
+
+    def test_concurrent_state_read_write(self):
+        t=self.bridge.create("OK",str(self.root))
+        errors=[]
+        def write():
+            try:
+                for i in range(60):
+                    self.bridge.save(dict(t,sequence=i))
+            except Exception as exc:
+                errors.append(exc)
+        worker=threading.Thread(target=write)
+        worker.start()
+        try:
+            for _ in range(100):
+                self.assertEqual(self.bridge.load(t["task_id"])["task_id"],t["task_id"])
+        finally:
+            worker.join(5)
+        self.assertEqual(errors,[])
+        self.assertFalse(worker.is_alive())
 
 
 class ProcessTests(Isolated):
