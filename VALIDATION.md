@@ -3,7 +3,7 @@
 Validated on 2026-10-23 with Python 3.12 on Windows and
 `codex-cli 0.163.0-alpha.11.1`.
 
-## Offline: 60 tests passed
+## Offline: 61 tests passed
 
 Tests exercise validated config, cache freshness and unknown states, both quota
 durations, partial windows, malformed/changed JSONL, UTF-16 snapshots, official
@@ -13,6 +13,7 @@ native resume command construction, restart recovery, duplicate dispatch,
 independent concurrent tasks, report receipts, clock/offset changes and CLI JSON.
 Additional Windows regressions cover an open reader during file replacement,
 transient sharing violations and concurrent task-state reads/writes.
+UTF-8 JSON output is also checked under a non-UTF-8 host encoding.
 
 The process isolation test launches real Python processes: it kills an owned
 parent and child while leaving an unrelated process running. Windows uses the

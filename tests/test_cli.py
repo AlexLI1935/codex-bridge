@@ -50,3 +50,9 @@ class CLITests(unittest.TestCase):
         self.assertEqual(rc, 0)
         self.assertEqual(result["version"], "1.0.0")
         self.assertFalse((Path(self.env["CODEX_BRIDGE_HOME"])/"tasks").exists())
+
+    def test_unicode_json_under_non_utf8_host(self):
+        self.env["PYTHONIOENCODING"]="ascii"
+        rc,result=self.call("config","set","timezone.os_timezone",json.dumps("系统时区"))
+        self.assertEqual(rc,0)
+        self.assertEqual(result["timezone"]["os_timezone"],"系统时区")

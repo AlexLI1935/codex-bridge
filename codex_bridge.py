@@ -364,6 +364,8 @@ class Bridge:
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     p = argparse.ArgumentParser(description="Codex Bridge: governed, resumable local Codex delegation")
     sub = p.add_subparsers(dest="command", required=True)
     init = sub.add_parser("init")
