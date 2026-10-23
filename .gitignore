@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env
+config.json
+tasks/
+results/
+runtime/
+*.zip
+*.sha256

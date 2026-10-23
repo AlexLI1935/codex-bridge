@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "usage": {
+    "five_hour_max_pct": 90,
+    "weekly_max_pct": 95,
+    "fresh_seconds": 300,
+    "reset_grace_seconds": 60
+  },
+  "timezone": {
+    "observed_utc_offset_minutes": null,
+    "observed_at": null,
+    "os_timezone": null
+  },
+  "models": {
+    "default": {
+      "model": null,
+      "reasoning_effort": "medium"
+    },
+    "complex": {
+      "model": null,
+      "reasoning_effort": "high"
+    }
+  }
+}
